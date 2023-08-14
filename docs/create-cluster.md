@@ -6,26 +6,26 @@ kubesprayを使用することで複数台のサーバーをまとめてクラ�
 まずは作業用PCにてgithubからkubesprayのリポジトリをダウンロードします。
 
 ```
-user@local-pc:~$ KUBESPRAY_VERSION=2.22.1
+user@local-pc:~/stack-controller$ KUBESPRAY_VERSION=2.22.1
 
-user@local-pc:~$ wget https://github.com/kubernetes-sigs/kubespray/archive/refs/tags/v${KUBESPRAY_VERSION}.tar.gz
+user@local-pc:~/stack-controller$ wget https://github.com/kubernetes-sigs/kubespray/archive/refs/tags/v${KUBESPRAY_VERSION}.tar.gz
 
-user@local-pc:~$ tar -xvf v${KUBESPRAY_VERSION}.tar.gz -C kubespray --strip-components 1
+user@local-pc:~/stack-controller$ tar -xvf v${KUBESPRAY_VERSION}.tar.gz -C kubespray --strip-components 1
 
-user@local-pc:~$ rm v${KUBESPRAY_VERSION}.tar.gz
+user@local-pc:~/stack-controller$ rm v${KUBESPRAY_VERSION}.tar.gz
 ```
 
 kubesprayの実行にはAnsibleを使用するため、必要なパッケージをインストールします。
 ```
-user@local-pc:~$ cd kubespray/
-user@local-pc:~$ sudo apt -y install python3-pip
-user@local-pc:~$ sudo pip install -r requirements.txt
+user@local-pc:~/stack-controller$ cd kubespray/
+user@local-pc:~/stack-controller/kubespray$ sudo apt -y install python3-pip
+user@local-pc:~/stack-controller/kubespray$ sudo pip install -r requirements.txt
 ```
 
 上記の準備が完了したら、実際にクラスタの構築を開始します。
 実行後、完了するまでに数10分~1時間程度かかるので、しばらく放置します。
 ```
-ansible-playbook -i inventory/cluster/inventory.ini cluster.yml -u ubuntu --become --private-key="~/.ssh/id_rsa"
+user@local-pc:~/stack-controller/kubespray$ ansible-playbook -i inventory/cluster/inventory.ini cluster.yml -u ubuntu --become --private-key="~/.ssh/id_rsa"
 ```
 
 コマンド内の個々のオプションについて簡単に説明します。
