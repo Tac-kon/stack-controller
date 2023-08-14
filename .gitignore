@@ -1,0 +1,8 @@
+/kubespray/*
+!/kubespray/inventory/
+/kubespray/inventory/*
+!/kubespray/inventory/cluster/
+/kubespray/inventory/cluster/*
+!/kubespray/inventory/cluster/inventory.ini
+
+*.tar.gz
