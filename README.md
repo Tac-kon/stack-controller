@@ -3,3 +3,6 @@ OpenStackのコントローラーをKubernetes上に乗せて、IaaSを外部に
 
 ## サーバーのセットアップ
  - [初期設定](./docs/init-servers.md)
+
+## Kubernetesクラスタ構築
+ - [Kuberntes](./docs/create-cluster.md)
