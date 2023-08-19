@@ -29,7 +29,7 @@ ArgoCDのマニフェストファイルには https://raw.githubusercontent.com/
 ubuntu@cr1:~$ mkdir argocd
 ubuntu@cr1:~$ cd argocd/
 
-ubuntu@cr1:~/argocd$ wget https://github.com/Tac-kon/stack-controller/tree/main/argocd/install.yaml
+ubuntu@cr1:~/argocd$ wget https://raw.githubusercontent.com/argoproj/argo-cd/v2.8.0/manifests/install.yaml
 ubuntu@cr1:~/argocd$ kubectl apply -n argocd -f install.yaml
 
 
