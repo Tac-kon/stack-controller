@@ -1,8 +1,9 @@
-# Kuberntesクラスタ構築
-Kubernetesクラスタを構築するのに、今回は[kubespray](https://github.com/kubernetes-sigs/kubespray)を使用します。
+# Kuberntesクラスタ作成
+Kubernetesクラスタを作成するのに、今回は[kubespray](https://github.com/kubernetes-sigs/kubespray)を使用します。
 kubesprayを使用することで複数台のサーバーをまとめてクラスタ化することができます。
 
 ## kubespray実行
+### 必要なパッケージのインストール
 まずは作業用PCにてgithubからkubesprayのリポジトリをダウンロードします。
 
 ```
@@ -22,7 +23,8 @@ user@local-pc:~/stack-controller/kubespray$ sudo apt -y install python3-pip
 user@local-pc:~/stack-controller/kubespray$ sudo pip install -r requirements.txt
 ```
 
-上記の準備が完了したら、実際にクラスタの構築を開始します。
+### クラスタ作成
+実際にクラスタを作成するために、下記のコマンドを実行します。
 実行後、完了するまでに数10分~1時間程度かかるので、しばらく放置します。
 ```
 user@local-pc:~/stack-controller/kubespray$ ansible-playbook -i inventory/cluster/inventory.ini cluster.yml -u ubuntu --become --private-key="~/.ssh/id_rsa"
