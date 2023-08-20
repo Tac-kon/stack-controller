@@ -1,4 +1,4 @@
-name: Auto Approve
+name: approve pull-request automatically
 on:
   pull_request:
     types:
