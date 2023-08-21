@@ -4,24 +4,36 @@ kubesprayを使用することで複数台のサーバーをまとめてクラ�
 
 ## kubespray実行
 ### 必要なパッケージのインストール
-まずは作業用PCにてgithubからkubesprayのリポジトリをダウンロードします。
+まずは作業用PCにてgithubからkubesprayのリポジトリをダウンロードして展開します。
 
 ```
-user@local-pc:~/stack-controller$ KUBESPRAY_VERSION=2.22.1
+user@local-pc:~/stack-controller$ cd
+user@local-pc:~$ KUBESPRAY_VERSION=2.22.1
+user@local-pc:~$ wget https://github.com/kubernetes-sigs/kubespray/archive/refs/tags/v${KUBESPRAY_VERSION}.tar.gz
 
-user@local-pc:~/stack-controller$ wget https://github.com/kubernetes-sigs/kubespray/archive/refs/tags/v${KUBESPRAY_VERSION}.tar.gz
-
-user@local-pc:~/stack-controller$ tar -xvf v${KUBESPRAY_VERSION}.tar.gz -C kubespray --strip-components 1
-
-user@local-pc:~/stack-controller$ rm v${KUBESPRAY_VERSION}.tar.gz
+user@local-pc:~$ mkdir ~/kubespray
+user@local-pc:~$ tar -xvf v${KUBESPRAY_VERSION}.tar.gz -C kubespray --strip-components 1
+user@local-pc:~$ rm v${KUBESPRAY_VERSION}.tar.gz
 ```
 
 kubesprayの実行にはAnsibleを使用するため、必要なパッケージをインストールします。
 ```
-user@local-pc:~/stack-controller$ cd kubespray/
-user@local-pc:~/stack-controller/kubespray$ sudo apt -y install python3-pip
-user@local-pc:~/stack-controller/kubespray$ sudo pip install -r requirements.txt
+user@local-pc:~$ cd ~/kubespray
+user@local-pc:~/kubespray$ sudo apt -y install python3-pip
+user@local-pc:~/kubespray$ sudo pip install -r requirements.txt
 ```
+
+### インベントリファイルのコピー
+続いて、このリポジトリ内のinventoryファイルをコピーします。
+```
+user@local-pc:~/kubespray$ cp -r inventory/sample inventory/cluster
+user@local-pc:~/kubespray$ cp -r ~/stack-controller/kubespray ~/
+```
+
+ここでinventoryディレクトリ以下の、今回変更を加えた3つのファイルについて簡単に説明します。
+ - group_vars/k8s_cluster/addons.yml: `MetalLB`を有効化するための設定を入れています。MetalLBとは、オンプレミスのKubernetes環境で`LoadBalancer`型のServiceリソースを有効化するソフトウェアです。今回は各種コントローラのサービスにLoadBalancerを使用するためにMetalLBの設定を入れます。
+ - group_vars/k8s_cluster/k8s-cluster.yml: 上記の`MetalLB`を有効化するために、主にネットワークドライバに関する設定を入れています。
+ - inventory.ini: インベントリファイルと呼ばれるファイルで、Kubernetesクラスタを構築する各サーバーの情報(IPアドレス、ホスト名など)が記載されたファイルです。今回使用するサーバーの情報に合わせて編集してあります。
 
 ### クラスタ作成
 実際にクラスタを作成するために、下記のコマンドを実行します。
@@ -31,7 +43,7 @@ user@local-pc:~/stack-controller/kubespray$ ansible-playbook -i inventory/cluste
 ```
 
 コマンド内の個々のオプションについて簡単に説明します。
- - -i: インベントリファイルを指定します。このファイル内に各サーバーの情報(IPアドレス、ホスト名など)が記載されており、その情報を基にクラスタを構築するようになっています。今回は[cluster/inventory.ini](../kubespray/inventory/cluster/inventory.ini)を使用しています。
+ - -i: インベントリファイルを指定します。
  - -u: 各サーバーにログインするためのユーザー名を指定します。
  - --become: root権限を付与します。一部のタスクを実行するために必要です。
  - --private-key: 各サーバーにSSH接続するための秘密鍵を指定します。

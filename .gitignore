@@ -5,4 +5,11 @@
 /kubespray/inventory/cluster/*
 !/kubespray/inventory/cluster/inventory.ini
 
+!/kubespray/inventory/cluster/group_vars/
+/kubespray/inventory/cluster/group_vars/*
+!/kubespray/inventory/cluster/group_vars/k8s_cluster
+/kubespray/inventory/cluster/group_vars/k8s_cluster/*
+!/kubespray/inventory/cluster/group_vars/k8s_cluster/k8s-cluster.yml
+!/kubespray/inventory/cluster/group_vars/k8s_cluster/addons.yml
+
 *.tar.gz
