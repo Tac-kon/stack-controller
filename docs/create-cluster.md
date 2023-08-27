@@ -51,7 +51,7 @@ user@local-pc:~/stack-controller/kubespray$ ansible-playbook -i inventory/cluste
 ## 動作確認
 kubesprayのAnsible完了後、クラスタが正常に構築されているか確認します。
 
-今回はコントローラー1にログインして、クラスタの動作確認を行います。
+今回はコントローラ1にログインして、クラスタの動作確認を行います。
 まずは以下のコマンドを実行して、`kubectl`をユーザー権限で実行できるようにします。
 ```
 ubuntu@cr1:~$ sudo cp -r /root/.kube ~/
