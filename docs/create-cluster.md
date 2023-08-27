@@ -31,8 +31,7 @@ user@local-pc:~/kubespray$ cp -r ~/stack-controller/kubespray ~/
 ```
 
 ここでinventoryディレクトリ以下の、今回変更を加えた3つのファイルについて簡単に説明します。
- - group_vars/k8s_cluster/addons.yml: `MetalLB`を有効化するための設定を入れています。MetalLBとは、オンプレミスのKubernetes環境で`LoadBalancer`型のServiceリソースを有効化するソフトウェアです。今回は各種コントローラのサービスにLoadBalancerを使用するためにMetalLBの設定を入れます。
- - group_vars/k8s_cluster/k8s-cluster.yml: 上記の`MetalLB`を有効化するために、主にネットワークドライバに関する設定を入れています。
+ - group_vars/k8s_cluster/k8s-cluster.yml: 今回は[MetalLB](https://metallb.universe.tf/)を有効化するために、ネットワークドライバを[Cilium](https://cilium.io/)にする設定を入れています。
  - inventory.ini: インベントリファイルと呼ばれるファイルで、Kubernetesクラスタを構築する各サーバーの情報(IPアドレス、ホスト名など)が記載されたファイルです。今回使用するサーバーの情報に合わせて編集してあります。
 
 ### クラスタ作成
