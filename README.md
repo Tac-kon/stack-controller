@@ -5,8 +5,8 @@ OpenStackのコントローラーをKubernetes上に乗せて、IaaSを外部に
  - [初期設定](./docs/init-servers.md)
 
 ## Kubernetesクラスタ構築
- - [Kuberntes](./docs/create-cluster.md)
-
+ - [Kubernetesクラスタ作成](./docs/create-cluster.md)
+ - [Kubernetesクラスタへの接続](./docs/access-cluster.md)
 
 ### Appendix
 - [Argocd](./docs/argocd.md)
