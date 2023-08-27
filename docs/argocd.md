@@ -12,9 +12,9 @@ ArgoCDを特定のGithubリポジトリに接続すると、リポジトリに�
 まずは`argocd`用のnamespaceを作成します。
 
 ```
-user@local-pc:~$ kubectl create ns argocd
+kubectl create ns argocd
 namespace/argocd created
-user@local-pc:~$ kubectl get ns
+kubectl get ns
 NAME              STATUS   AGE
 argocd            Active   3s
 default           Active   157m
@@ -25,14 +25,14 @@ kube-system       Active   157m
 
 続いてargocdをデプロイします。
 ```
-user@local-pc:~$ ARGOCD_VERSION=2.8.0
-user@local-pc:~$ kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/v${ARGOCD_VERSION}/manifests/install.yaml
+ARGOCD_VERSION=2.8.0
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/v${ARGOCD_VERSION}/manifests/install.yaml
 ```
 
 ここで`kubectl get pods -n argocd -o wide`を実行すると、ArgoCD関連のPodが起動していることがわかります。
 
 ```
-user@local-pc:~$ kubectl get pods -n argocd -o wide
+kubectl get pods -n argocd -o wide
 NAME                                                READY   STATUS    RESTARTS   AGE   IP               NODE   NOMINATED NODE   READINESS GATES
 argocd-application-controller-0                     1/1     Running   0          33m   10.233.98.11     cp2    <none>           <none>
 argocd-applicationset-controller-5787d44dff-jr7c4   1/1     Running   0          33m   10.233.116.138   cp1    <none>           <none>
@@ -41,7 +41,7 @@ argocd-notifications-controller-5d889fdf74-shf9r    1/1     Running   0         
 argocd-redis-7d8d46cc7f-wlgx8                       1/1     Running   0          33m   10.233.98.10     cp2    <none>           <none>
 argocd-repo-server-7b6d785784-qz82z                 1/1     Running   0          33m   10.233.91.7      cp3    <none>           <none>
 argocd-server-67f667d48c-hb5sw                      1/1     Running   0          33m   10.233.116.139   cp1    <none>           <none>
-user@local-pc:~$ 
+
 ```
 
 しかしながら、上記の例ではPodがコンピュートノードに展開されてしまっています。
@@ -49,24 +49,24 @@ user@local-pc:~$
 
 まずはコントローラ1, コントローラ2にそれぞれ`argocd-node=true`というラベルを付与します。
 ```
-user@local-pc:~$ kubectl label node cr1 argocd-node=true
-user@local-pc:~$ kubectl label node cr2 argocd-node=true
+kubectl label node cr1 argocd-node=true
+kubectl label node cr2 argocd-node=true
 ```
 
 続いて、Podをスケジューリングしている`Deploymentリソース`と`StatefulSetリソース`に`nodeAffinity`の設定を適用して、`argocd-node=true`を付与したノードにのみPodが配置されるようにします。
 ```
 # "argocd-~"という名前のDeploymentにpatchを充てる
-user@local-pc:~$ for DEPLOY in $(kubectl get deploy -n argocd | awk '{
+for DEPLOY in $(kubectl get deploy -n argocd | awk '{
 print $1}' | grep ^argocd-); do
 kubectl patch deploy -n argocd ${DEPLOY} -p '{"spec": {"template": {"spec": {"affinity": {"nodeAffinity": {"requiredDuringSchedulingIgnoredDuringExecution": {"nodeSelectorTerms": [{"matchExpressions": [{"key":"argocd-node", "operator":"In", "values": ["true"]}]}]}}}}}}}'; done
 
 # StatefulSet: argocd-application-controllerにPatchを充てる
-user@local-pc:~$ kubectl patch StatefulSet -n argocd argocd-application-controller -p '{"spec": {"template": {"spec": {"affinity": {"nodeAffinity": {"requiredDuringSchedulingIgnoredDuringExecution": {"nodeSelectorTerms": [{"matchExpressions": [{"key":"argocd-node", "operator":"In", "values": ["true"]}]}]}}}}}}}'
+kubectl patch StatefulSet -n argocd argocd-application-controller -p '{"spec": {"template": {"spec": {"affinity": {"nodeAffinity": {"requiredDuringSchedulingIgnoredDuringExecution": {"nodeSelectorTerms": [{"matchExpressions": [{"key":"argocd-node", "operator":"In", "values": ["true"]}]}]}}}}}}}'
 ```
 
 時間が立つと、下記のようにコントローラノード(cr1, cr2)にPodが配置されます。
 ```
-user@local-pc:~$ kubectl get pods -n argocd -o wide
+kubectl get pods -n argocd -o wide
 NAME                                                READY   STATUS    RESTARTS   AGE   IP              NODE   NOMINATED NODE   READINESS GATES
 argocd-application-controller-0                     1/1     Running   0          11m   10.233.94.4     cr1    <none>           <none>
 argocd-applicationset-controller-57666dd6fc-7r74v   1/1     Running   0          44m   10.233.79.194   cr2    <none>           <none>
@@ -80,14 +80,14 @@ argocd-server-7476ddbfbc-6wgjm                      1/1     Running   0         
 ## ルーティング
 先ほどデプロイしたArgoCDを外部からアクセスできるようにするため、`argocd-server`のサービスをClusterIPからLoadBalancerに変更します。
 ```
-user@local-pc:~$ kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
+kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
 ```
 
 適用後少し時間が経つと、`argocd-server`のExternalIPが設定されます。
 
 ExternalIPは下記のように確認できます。この場合は`10.0.1.201`が割り当てられていることを確認できます。
 ```
-user@local-pc:~$ kubectl -n argocd get svc argocd-server -o jsonpath="{.status.loadBalancer.ingress[*].ip}"
+kubectl -n argocd get svc argocd-server -o jsonpath="{.status.loadBalancer.ingress[*].ip}"
 10.0.1.201
 ```
 
@@ -95,10 +95,10 @@ user@local-pc:~$ kubectl -n argocd get svc argocd-server -o jsonpath="{.status.l
 続いてコントローラ1上で`argocd`コマンドを使用できるようにセットアップします。
 下記コマンドを実行してください。
 ```
-user@local-pc:~$ VERSION=2.8.0
-user@local-pc:~$ sudo curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/download/v${VERSION}/argocd-linux-amd64
-user@local-pc:~$ sudo chmod +x /usr/local/bin/argocd
-user@local-pc:~$ echo "$(argocd completion bash)" | sudo tee /etc/bash_completion.d/argocd
+VERSION=2.8.0
+sudo curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/download/v${VERSION}/argocd-linux-amd64
+sudo chmod +x /usr/local/bin/argocd
+echo "$(argocd completion bash)" | sudo tee /etc/bash_completion.d/argocd
 ```
 
 ## ログイン(CUI)
@@ -106,19 +106,19 @@ user@local-pc:~$ echo "$(argocd completion bash)" | sudo tee /etc/bash_completio
 
 まずはArgoCDのログインパスワードを確認します。次のコマンドで出力された値がパスワードになります。
 ```
-user@local-pc:~$ kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d ; echo
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d ; echo
 ```
 
 では次のコマンドを入力してログインしてみましょう。
 
 ```
-user@local-pc:~$ argocd login 10.0.1.201
+argocd login 10.0.1.201
 ```
 入力後`username`と`password`について聞かれるので、それぞれ`admin`と先ほど確認したパスワードを入力しましょう。
 
 ログインに成功したら、初期パスワードを任意のものに変更しましょう。次のコマンドでパスワードを変更できます。
 ```
-ubuntu@cr1:~$ argocd account update-password
+argocd account update-password
 ```
 
 ## ログイン(WebUI)

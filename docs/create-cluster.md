@@ -7,30 +7,30 @@ kubesprayを使用することで複数台のサーバーをまとめてクラ�
 まずは作業用PCにてgithubからkubesprayのリポジトリをダウンロードして展開します。
 
 ```
-user@local-pc:~/stack-controller$ cd
-user@local-pc:~$ KUBESPRAY_VERSION=2.22.1
-user@local-pc:~$ wget https://github.com/kubernetes-sigs/kubespray/archive/refs/tags/v${KUBESPRAY_VERSION}.tar.gz
+KUBESPRAY_VERSION=2.22.1
+wget https://github.com/kubernetes-sigs/kubespray/archive/refs/tags/v${KUBESPRAY_VERSION}.tar.gz
 
-user@local-pc:~$ mkdir ~/kubespray
-user@local-pc:~$ tar -xvf v${KUBESPRAY_VERSION}.tar.gz -C kubespray --strip-components 1
-user@local-pc:~$ rm v${KUBESPRAY_VERSION}.tar.gz
+mkdir ~/kubespray
+tar -xvf v${KUBESPRAY_VERSION}.tar.gz -C ~/kubespray --strip-components 1
+rm v${KUBESPRAY_VERSION}.tar.gz
 ```
 
 kubesprayの実行にはAnsibleを使用するため、必要なパッケージをインストールします。
 ```
-user@local-pc:~$ cd ~/kubespray
-user@local-pc:~/kubespray$ sudo apt -y install python3-pip
-user@local-pc:~/kubespray$ sudo pip install -r requirements.txt
+cd ~/kubespray
+sudo apt -y install python3-pip
+sudo pip install -r requirements.txt
 ```
 
 ### インベントリファイルのコピー
 続いて、このリポジトリ内のinventoryファイルをコピーします。
 ```
-user@local-pc:~/kubespray$ cp -r inventory/sample inventory/cluster
-user@local-pc:~/kubespray$ cp -r ~/stack-controller/kubespray ~/
+cd ~/kubespray
+cp -r inventory/sample inventory/cluster
+cp -r ~/stack-controller/kubespray ~/
 ```
 
-ここでinventoryディレクトリ以下の、今回変更を加えた3つのファイルについて簡単に説明します。
+ここでinventoryディレクトリ以下の、今回変更を加えた2つのファイルについて簡単に説明します。
  - group_vars/k8s_cluster/k8s-cluster.yml: 今回は[MetalLB](https://metallb.universe.tf/)を有効化するために、ネットワークドライバを[Cilium](https://cilium.io/)にする設定を入れています。
  - inventory.ini: インベントリファイルと呼ばれるファイルで、Kubernetesクラスタを構築する各サーバーの情報(IPアドレス、ホスト名など)が記載されたファイルです。今回使用するサーバーの情報に合わせて編集してあります。
 
@@ -38,7 +38,8 @@ user@local-pc:~/kubespray$ cp -r ~/stack-controller/kubespray ~/
 実際にクラスタを作成するために、下記のコマンドを実行します。
 実行後、完了するまでに数10分~1時間程度かかるので、しばらく放置します。
 ```
-user@local-pc:~/stack-controller/kubespray$ ansible-playbook -i inventory/cluster/inventory.ini cluster.yml -u ubuntu --become --private-key="~/.ssh/id_rsa"
+cd ~/kubespray
+ansible-playbook -i inventory/cluster/inventory.ini cluster.yml -u ubuntu --become --private-key="~/.ssh/id_rsa"
 ```
 
 コマンド内の個々のオプションについて簡単に説明します。

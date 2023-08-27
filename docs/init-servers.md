@@ -5,33 +5,33 @@
 ## 公開鍵設定
 まずは作業用PCにて下記のコマンドを実行して、SSH接続用の秘密鍵/公開鍵のキーペアを作成します。
 ```
-user@local-pc:~$ ssh-keygen -t rsa
+ssh-keygen -t rsa
 ```
 
 いくつかの項目にてプロンプトが表示されますが、すべて「Enter」を入力します。
 キーペア作成後、作業用PCにて各サーバーに設定する公開鍵の中身を確認しておきます。
 ```
-user@local-pc:~$ cat ~/.ssh/id_rsa.pub
+cat ~/.ssh/id_rsa.pub
 ssh-rsa ~~~ user@local-pc  ## この出力結果を各サーバーに設定する。
 ```
 
 続いて、セットアップ対象のサーバーにログインして、先ほど作成したSSH公開鍵を設定します。
 ```
-user@local-pc:~$ ssh ubuntu@(サーバーのIPアドレス)
-ubuntu@server:~$ PUBLICK_KEY="( cat ~/.ssh/id_rsa.pub の出力結果 )"
-ubuntu@server:~$ echo "${PUBLICK_KEY}" | tee -a ${HOME}/.ssh/authorized_keys
+ssh ubuntu@(サーバーのIPアドレス)
+PUBLICK_KEY="( cat ~/.ssh/id_rsa.pub の出力結果 )"
+echo "${PUBLICK_KEY}" | tee -a ${HOME}/.ssh/authorized_keys
 ```
 
 公開鍵設定後、作業用PCからパスワード入力なしでSSH接続できるか確認します。
 ```
-user@local-pc:~$ ssh ubuntu@(サーバーのIPアドレス)
+ssh ubuntu@(サーバーのIPアドレス)
 ```
 パスワードを聞かれずにSSH接続できたら設定完了です。
 
 ## sudoのパスワード無効化
 サーバー内で下記コマンドを実行して、sudo権限を付与したコマンドをパスワード入力なしで実行できるようにします。
 ```
-ubuntu@server:~$ echo "ubuntu ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/99-config
+echo "ubuntu ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/99-config
 ```
 
 ## netplan編集
@@ -40,12 +40,12 @@ ubuntu@server:~$ echo "ubuntu ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/
 もしもセットアップに失敗してSSH接続できなくなった場合は直接ログインして`/etc/netplan/99-config.yaml`の中身を確認して設定しなおしてください。
 
 ```
-ubuntu@server:~$ sudo rm /etc/netplan/*.yaml
+sudo rm /etc/netplan/*.yaml
 
-ubuntu@server:~$ NIC=$(for DEV in `find /sys/devices -name net | grep -v virtual`; do ls $DEV/ | grep enp; done)
-ubuntu@server:~$ IP_ADDRESS=$(ip addr show | grep 10.0.1. | awk {'print $2'})
+NIC=$(for DEV in `find /sys/devices -name net | grep -v virtual`; do ls $DEV/ | grep enp; done)
+IP_ADDRESS=$(ip addr show | grep 10.0.1. | awk {'print $2'})
 
-ubuntu@server:~$ sudo tee /etc/netplan/99-config.yaml <<EOF
+sudo tee /etc/netplan/99-config.yaml <<EOF
 network:
   ethernets:
     ${NIC}:
@@ -74,5 +74,5 @@ network:
   version: 2
 EOF
 
-ubuntu@server:~$ sudo netplan apply
+sudo netplan apply
 ```
