@@ -1,20 +1,20 @@
 # ArgoCD
 構築したKubernetesクラスタに対して、[ArgoCD](https://argo-cd.readthedocs.io/en/stable/)の設定を行います。
 
-
 ArgoCDは主にKubernetesクラスタへのCI/CDパイプラインの構築に使用されます。
 ArgoCDを特定のGithubリポジトリに接続すると、リポジトリに更新があった場合に更新が自動でKubernetesクラスタに反映されるようになります。
 
-今回はOpenStackのコントローラーのKubernetesクラスタへのデプロイを、ArgoCDを使用して行えるようにしたいと思います。
+著者の環境ではOpenStackのコントローラーのKubernetesクラスタへのデプロイを、ArgoCDを使用して行えるようにしました。
 
 
 ## デプロイ
-まずはコントローラ1にログインして、`argocd`用のnamespaceを作成します。
+### 
+まずは`argocd`用のnamespaceを作成します。
 
 ```
-ubuntu@cr1:~$ kubectl create ns argocd
+user@local-pc:~$ kubectl create ns argocd
 namespace/argocd created
-ubuntu@cr1:~$ kubectl get ns
+user@local-pc:~$ kubectl get ns
 NAME              STATUS   AGE
 argocd            Active   3s
 default           Active   157m
@@ -23,57 +23,96 @@ kube-public       Active   157m
 kube-system       Active   157m
 ```
 
-続いてargocdのデプロイを行います。
-ArgoCDのマニフェストファイルには https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml をフォークしたものを使用します。
+続いてargocdをデプロイします。
 ```
-ubuntu@cr1:~$ mkdir argocd
-ubuntu@cr1:~$ cd argocd/
-
-ubuntu@cr1:~/argocd$ wget https://raw.githubusercontent.com/argoproj/argo-cd/v2.8.0/manifests/install.yaml
-ubuntu@cr1:~/argocd$ kubectl apply -n argocd -f install.yaml
-
-
-ubuntu@cr1:~/argocd$ kubectl patch service -n argocd argocd-server --type='json' -p='[{"op": "replace", "path": "/spec/type", "value": "NodePort"}]'
-ubuntu@cr1:~/argocd$ kubectl patch service -n argocd argocd-server --type='json' -p='[{"op": "replace", "path": "/spec/ports/1/nodePort", "value": 30443}]'
+user@local-pc:~$ ARGOCD_VERSION=2.8.0
+user@local-pc:~$ kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/v${ARGOCD_VERSION}/manifests/install.yaml
 ```
 
-`kubectl get pods -n argocd`を実行して、すべてのpodが起動していたら、デプロイは完了です。
-podが起動している状態とは`STATUS`が`Running`になっていることを指します。
+ここで`kubectl get pods -n argocd -o wide`を実行すると、ArgoCD関連のPodが起動していることがわかります。
+
 ```
-ubuntu@cr1:~/argocd$ kubectl get pods -n argocd
-NAME                                                READY   STATUS    RESTARTS   AGE
-argocd-application-controller-0                     1/1     Running   0          9m20s
-argocd-applicationset-controller-5787d44dff-q5bz2   1/1     Running   0          9m20s
-argocd-dex-server-858cfd495f-5cmnv                  1/1     Running   0          9m20s
-argocd-notifications-controller-5d889fdf74-rxl44    1/1     Running   0          9m20s
-argocd-redis-7d8d46cc7f-2kdr2                       1/1     Running   0          9m20s
-argocd-repo-server-7b6d785784-pvktw                 1/1     Running   0          9m20s
-argocd-server-67f667d48c-jj9wc                      1/1     Running   0          9m20s
-ubuntu@cr1:~/argocd$
+user@local-pc:~$ kubectl get pods -n argocd -o wide
+NAME                                                READY   STATUS    RESTARTS   AGE   IP               NODE   NOMINATED NODE   READINESS GATES
+argocd-application-controller-0                     1/1     Running   0          33m   10.233.98.11     cp2    <none>           <none>
+argocd-applicationset-controller-5787d44dff-jr7c4   1/1     Running   0          33m   10.233.116.138   cp1    <none>           <none>
+argocd-dex-server-858cfd495f-m8pls                  1/1     Running   0          33m   10.233.98.9      cp2    <none>           <none>
+argocd-notifications-controller-5d889fdf74-shf9r    1/1     Running   0          33m   10.233.91.8      cp3    <none>           <none>
+argocd-redis-7d8d46cc7f-wlgx8                       1/1     Running   0          33m   10.233.98.10     cp2    <none>           <none>
+argocd-repo-server-7b6d785784-qz82z                 1/1     Running   0          33m   10.233.91.7      cp3    <none>           <none>
+argocd-server-67f667d48c-hb5sw                      1/1     Running   0          33m   10.233.116.139   cp1    <none>           <none>
+user@local-pc:~$ 
+```
+
+しかしながら、上記の例ではPodがコンピュートノードに展開されてしまっています。
+今回はコントローラノード(cr1, cr2)にのみPodを配置したいため、次の手順を実施ます。
+
+まずはコントローラ1, コントローラ2にそれぞれ`argocd-node=true`というラベルを付与します。
+```
+user@local-pc:~$ kubectl label node cr1 argocd-node=true
+user@local-pc:~$ kubectl label node cr2 argocd-node=true
+```
+
+続いて、Podをスケジューリングしている`Deploymentリソース`と`StatefulSetリソース`に`nodeAffinity`の設定を適用して、`argocd-node=true`を付与したノードにのみPodが配置されるようにします。
+```
+# "argocd-~"という名前のDeploymentにpatchを充てる
+user@local-pc:~$ for DEPLOY in $(kubectl get deploy -n argocd | awk '{
+print $1}' | grep ^argocd-); do
+kubectl patch deploy -n argocd ${DEPLOY} -p '{"spec": {"template": {"spec": {"affinity": {"nodeAffinity": {"requiredDuringSchedulingIgnoredDuringExecution": {"nodeSelectorTerms": [{"matchExpressions": [{"key":"argocd-node", "operator":"In", "values": ["true"]}]}]}}}}}}}'; done
+
+# StatefulSet: argocd-application-controllerにPatchを充てる
+user@local-pc:~$ kubectl patch StatefulSet -n argocd argocd-application-controller -p '{"spec": {"template": {"spec": {"affinity": {"nodeAffinity": {"requiredDuringSchedulingIgnoredDuringExecution": {"nodeSelectorTerms": [{"matchExpressions": [{"key":"argocd-node", "operator":"In", "values": ["true"]}]}]}}}}}}}'
+```
+
+時間が立つと、下記のようにコントローラノード(cr1, cr2)にPodが配置されます。
+```
+user@local-pc:~$ kubectl get pods -n argocd -o wide
+NAME                                                READY   STATUS    RESTARTS   AGE   IP              NODE   NOMINATED NODE   READINESS GATES
+argocd-application-controller-0                     1/1     Running   0          11m   10.233.94.4     cr1    <none>           <none>
+argocd-applicationset-controller-57666dd6fc-7r74v   1/1     Running   0          44m   10.233.79.194   cr2    <none>           <none>
+argocd-dex-server-b854db4f9-7pb5s                   1/1     Running   0          44m   10.233.94.3     cr1    <none>           <none>
+argocd-notifications-controller-7947f48b54-wtmtm    1/1     Running   0          44m   10.233.79.197   cr2    <none>           <none>
+argocd-redis-b8494bc67-l7tsj                        1/1     Running   0          44m   10.233.79.195   cr2    <none>           <none>
+argocd-repo-server-867dcf5f9b-qtdg5                 1/1     Running   0          44m   10.233.94.2     cr1    <none>           <none>
+argocd-server-7476ddbfbc-6wgjm                      1/1     Running   0          44m   10.233.79.196   cr2    <none>           <none>
+```
+
+## ルーティング
+先ほどデプロイしたArgoCDを外部からアクセスできるようにするため、`argocd-server`のサービスをClusterIPからLoadBalancerに変更します。
+```
+user@local-pc:~$ kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
+```
+
+適用後少し時間が経つと、`argocd-server`のExternalIPが設定されます。
+
+ExternalIPは下記のように確認できます。この場合は`10.0.1.201`が割り当てられていることを確認できます。
+```
+user@local-pc:~$ kubectl -n argocd get svc argocd-server -o jsonpath="{.status.loadBalancer.ingress[*].ip}"
+10.0.1.201
 ```
 
 ## コマンドラインツールのインストール
 続いてコントローラ1上で`argocd`コマンドを使用できるようにセットアップします。
 下記コマンドを実行してください。
 ```
-ubuntu@cr1:~$ VERSION=2.8.0
-ubuntu@cr1:~$ curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/download/v${VERSION}/argocd-linux-amd64
-ubuntu@cr1:~$ sudo chmod +x /usr/local/bin/argocd
-ubuntu@cr1:~$ echo "argocd completion bash" | sudo tee /etc/bash_completion.d/argocd
+user@local-pc:~$ VERSION=2.8.0
+user@local-pc:~$ sudo curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/download/v${VERSION}/argocd-linux-amd64
+user@local-pc:~$ sudo chmod +x /usr/local/bin/argocd
+user@local-pc:~$ echo "$(argocd completion bash)" | sudo tee /etc/bash_completion.d/argocd
 ```
 
-## ログイン(CLI)
-デプロイしたArgoCDにログインしてみましょう。
+## ログイン(CUI)
+それではデプロイしたArgoCDにログインしてみましょう。
 
 まずはArgoCDのログインパスワードを確認します。次のコマンドで出力された値がパスワードになります。
 ```
-ubuntu@cr1:~$ kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d ; echo
+user@local-pc:~$ kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d ; echo
 ```
 
 では次のコマンドを入力してログインしてみましょう。
 
 ```
-ubuntu@cr1:~$ argocd login 10.0.1.2:30443
+user@local-pc:~$ argocd login 10.0.1.201
 ```
 入力後`username`と`password`について聞かれるので、それぞれ`admin`と先ほど確認したパスワードを入力しましょう。
 
@@ -82,35 +121,19 @@ ubuntu@cr1:~$ argocd login 10.0.1.2:30443
 ubuntu@cr1:~$ argocd account update-password
 ```
 
-ここまで完了したら、いよいよArgoCDとGithubリポジトリを接続します。
-```
-ubuntu@cr1:~$ kubectl create ns controller
-ubuntu@cr1:~$ argocd app create stack-controller --repo git@github.com:Tac-kon/stack-controller.git --path manifests --dest-server https://kubernetes.default.svc --dest-namespace controller
-```
-
-ここで、各オプションについて簡単に説明します。
- - --repo: githubのリモートリポジトリのURLを指定します。
- - --path: 同期するディレクトリを指定します。
- - --dest-server: アプリケーションを動かすKubernetesクラスタを指定します。
- - --dest-namespace: アプリケーションを動かすnamespaceを指定します。
-
 ## ログイン(WebUI)
-ブラウザを開き、https://10.0.1.2:30443 にアクセスしてみてください。
+ArgoCDにはWebUIも備わっています。
+ブラウザを開き、https://10.0.1.201 にアクセスしてみてください。
 
+![ArgoCD_Login](../images/argocd-login.png)
 ログイン情報は
- - ユーザー名: admin
- - パスワード: 先ほど設定したパスワード
+ - username: admin
+ - password: 先ほど設定したパスワード
 
-です。正しくログインできた場合、次のような画面が表示されるはずです。
+です。正しくログインできた場合、次のような画面が表示されます。
 
 ![ArgoCD_WebUI](../images/argocd-ui.png)
 
 
 ### 参考
  - https://www.blog.slow-fire.net/2022/05/24/%E4%BB%8A%E6%9B%B4%E3%81%AA%E3%82%89%E3%81%8Cargo-cd%E3%82%92%E4%BD%BF%E3%81%A3%E3%81%A6%E3%81%BF%E3%81%9F/
- - https://medium.com/penguin-lab/change-clusterip-to-noderport-via-kubectl-patch-command-d2e0279a66cd
-
-
-
-name: https
-    nodePort: 31414
