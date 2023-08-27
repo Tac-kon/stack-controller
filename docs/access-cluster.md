@@ -8,11 +8,11 @@
 ## kubectlのインストール
 まずは作業用PCに`kubectl`をインストールします。
 ```
-user@local-pc:~$ KUBECTL_VERSION=1.28.0
-user@local-pc:~$ curl -LO https://dl.k8s.io/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl
-user@local-pc:~$ chmod +x ./kubectl
-user@local-pc:~$ sudo mv ./kubectl /usr/local/bin/kubectl
-user@local-pc:~$ kubectl version --client
+KUBECTL_VERSION=1.28.0
+curl -LO https://dl.k8s.io/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl
+chmod +x ./kubectl
+sudo mv ./kubectl /usr/local/bin/kubectl
+kubectl version --client
 ```
 正しいバージョンが出力されていれば、正常にインストールされています。
 
@@ -23,20 +23,20 @@ user@local-pc:~$ kubectl version --client
 
 下記のコマンドを実行して、作業用PCの`~/.kube/config`にコントローラ1から読みだしたクラスタの認証情報を書き込みます。
 ```
-user@local-pc:~$ CONFIG=${HOME}/.kube/config
-user@local-pc:~$ mkdir ${HOME}/.kube
-user@local-pc:~$ touch ${CONFIG}
+CONFIG=${HOME}/.kube/config
+mkdir ${HOME}/.kube
+touch ${CONFIG}
 
-user@local-pc:~$ CP1_ADDR=10.0.1.2
-user@local-pc:~$ echo "$(ssh ubuntu@${CP1_ADDR} kubectl config view --raw) | tee -a ${CONFIG}
-user@local-pc:~$ sed -e 's/127.0.0.1:6443/${CP1_ADDR}:6443/g' ${CONFIG}
-user@local-pc:~$ sed -e 's/cluster.local/cluster.dc/g' ${CONFIG}
+CP1_ADDR=10.0.1.2
+echo "$(ssh ubuntu@${CP1_ADDR} kubectl config view --raw) | tee -a ${CONFIG}
+sed -e 's/127.0.0.1:6443/${CP1_ADDR}:6443/g' ${CONFIG}
+sed -e 's/cluster.local/cluster.dc/g' ${CONFIG}
 ```
 
 ### 動作確認
 作業用PC上で`kubectl get nodes`を実行します。下記のようにクラスタ内のサーバー一覧が表示されれば設定は完了です。
 ```
-user@local-pc:~$  kubectl get nodes
+ kubectl get nodes
 NAME   STATUS   ROLES           AGE     VERSION
 cp1    Ready    <none>          5d10h   v1.26.5
 cp2    Ready    <none>          5d10h   v1.26.5
