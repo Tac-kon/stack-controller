@@ -29,4 +29,4 @@ jobs:
           provenance: false
           push: true
           tags: |
-            ghcr.io/${{ ${{ github.repository_owner }} | tr 'A-Z' 'a-z' }}/${{ github.repository_owner }}/${{ github.event.repository.name }}/${{ env.ALPINE }}:latest
+            ghcr.io/$(${{ github.repository_owner }} | tr 'A-Z' 'a-z')/${{ github.repository_owner }}/${{ github.event.repository.name }}/${{ env.ALPINE }}:latest
