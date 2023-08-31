@@ -1,0 +1,32 @@
+name: build and push images
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  ALPINE: alpine
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v3
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          context: ./docker/alpine
+          provenance: false
+          push: true
+          tags: |
+            ghcr.io/${{ env.ALPINE }}:${{ github.event.release.tag_name }}
+            ghcr.io/${{ env.ALPINE }}:latest
