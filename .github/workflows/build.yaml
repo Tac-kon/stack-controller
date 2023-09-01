@@ -35,4 +35,4 @@ jobs:
           provenance: false
           push: true
           tags: |
-            ghcr.io/${{ env.REPO }}/${{ matrix.target }}:${{ env.RELEASE_VERSION }}
+            ghcr.io/${{ env.REPO }}/${{ matrix.target }}:${{ github.sha }}
