@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nginx-deployment
+  name: nginx
   namespace: nginx
 spec:
   selector:
@@ -15,6 +15,6 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: ghcr.io/tac-kon/stack-controller/nginx:v1.0.0
+        image: ghcr.io/tac-kon/stack-controller/nginx:latest
         ports:
         - containerPort: 80

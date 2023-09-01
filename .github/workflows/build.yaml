@@ -1,10 +1,8 @@
 name: build and push images
 on:
-  push:
-
-env:
-  ALPINE: alpine
-
+  branches:
+    - main
+  types: [closed]
 jobs:
   build-and-push:
     runs-on: ubuntu-22.04
@@ -25,7 +23,6 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Lowercase the repo name and username
         run: echo "REPO=${GITHUB_REPOSITORY,,}" >>${GITHUB_ENV}           
       - name: Build and push
@@ -35,4 +32,5 @@ jobs:
           provenance: false
           push: true
           tags: |
+            ghcr.io/${{ env.REPO }}/${{ matrix.target }}:latest
             ghcr.io/${{ env.REPO }}/${{ matrix.target }}:${{ github.sha }}

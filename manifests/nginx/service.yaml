@@ -4,12 +4,12 @@ metadata:
   name: nginx-service
   namespace: nginx
   labels:
-    app: nginx-app
+    app: nginx
     name: nginx
 spec:
   type: LoadBalancer
   ports:
-  - name: nginx-port
+  - name: port
     port: 80
     targetPort: 80
     protocol: TCP
