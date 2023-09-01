@@ -1,8 +1,6 @@
 name: build and push images
 on:
   push:
-    tags:
-      - 'v*.*.*'
 
 env:
   ALPINE: alpine
