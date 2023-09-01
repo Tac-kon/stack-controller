@@ -1,6 +1,8 @@
 name: build and push images
 on:
   push:
+    tags:
+      - 'v*.*.*'
 
 env:
   ALPINE: alpine
@@ -11,6 +13,9 @@ jobs:
     permissions:
       contents: read
       packages: write
+    strategy:
+      matrix:
+        target: ["alpine", "nginx"]      
     steps:
       - name: checkout
         uses: actions/checkout@v3
@@ -28,8 +33,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v4
         with:
-          context: ./docker/alpine
+          context: ./${{ matrix.target }}
           provenance: false
           push: true
           tags: |
-            ghcr.io/${{ env.REPO }}/${{ env.ALPINE }}:${{ github.sha }}
+            ghcr.io/${{ env.REPO }}/${{ matrix.target }}:${{ env.RELEASE_VERSION }}
