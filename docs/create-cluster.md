@@ -4,15 +4,11 @@ kubesprayを使用することで複数台のサーバーをまとめてクラ�
 
 ## kubespray実行
 ### 必要なパッケージのインストール
-まずは作業用PCにてgithubからkubesprayのリポジトリをダウンロードして展開します。
+まずは作業用PCにてgithubからkubesprayのリポジトリをcloneします。
 
 ```
 KUBESPRAY_VERSION=2.22.1
-wget https://github.com/kubernetes-sigs/kubespray/archive/refs/tags/v${KUBESPRAY_VERSION}.tar.gz
-
-mkdir ~/kubespray
-tar -xvf v${KUBESPRAY_VERSION}.tar.gz -C ~/kubespray --strip-components 1
-rm v${KUBESPRAY_VERSION}.tar.gz
+git clone -b ${KUBESPRAY_VERSION} --depth 1 https://github.com/kubernetes-sigs/kubespray.git
 ```
 
 kubesprayの実行にはAnsibleを使用するため、必要なパッケージをインストールします。
