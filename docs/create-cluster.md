@@ -8,7 +8,7 @@ kubesprayを使用することで複数台のサーバーをまとめてクラ�
 
 ```
 KUBESPRAY_VERSION=2.22.1
-git clone -b ${KUBESPRAY_VERSION} --depth 1 https://github.com/kubernetes-sigs/kubespray.git
+git clone -b v${KUBESPRAY_VERSION} --depth 1 https://github.com/kubernetes-sigs/kubespray.git
 ```
 
 kubesprayの実行にはAnsibleを使用するため、必要なパッケージをインストールします。
