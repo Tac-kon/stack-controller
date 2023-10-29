@@ -72,7 +72,7 @@ kubectl patch deploy -n argocd ${DEPLOY} -p '{"spec": {"template": {"spec": {"af
 kubectl patch StatefulSet -n argocd argocd-application-controller -p '{"spec": {"template": {"spec": {"affinity": {"nodeAffinity": {"requiredDuringSchedulingIgnoredDuringExecution": {"nodeSelectorTerms": [{"matchExpressions": [{"key":"argocd-node", "operator":"In", "values": ["true"]}]}]}}}}}}}'
 ```
 
-時間が立つと、下記のようにコントローラノード(cr1, cr2)に Pod が配置されます。
+時間が立つと、下記のようにコントローラノードに Pod が配置されます。
 
 ```
 kubectl get pods -n argocd -o wide
