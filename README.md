@@ -8,6 +8,7 @@ OpenStackのコントローラーをKubernetes上に乗せて、IaaSを外部に
  - [Kubernetesクラスタ作成](./docs/create-cluster.md)
  - [Kubernetesクラスタへの接続](./docs/access-cluster.md)
  - [MetalLBの有効化](./docs/metallb.md)
+ - [Rook Cephのデプロイ](./docs/rook-ceph.md)
 
 ### Appendix
 - [ArgoCD](./docs/argocd.md)
