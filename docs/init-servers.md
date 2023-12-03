@@ -42,7 +42,7 @@ echo "ubuntu ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/99-config
 ```
 sudo rm /etc/netplan/*.yaml
 
-NIC=$(for DEV in `find /sys/devices -name net | grep -v virtual`; do ls $DEV/ | grep enp; done)
+NIC=$(for DEV in `find /sys/devices -name net | grep -v virtual`; do ls $DEV/ | grep -e "enp" -e "eth"; done)
 IP_ADDRESS=$(ip addr show | grep 10.0.1. | awk {'print $2'})
 
 sudo tee /etc/netplan/99-config.yaml <<EOF
