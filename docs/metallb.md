@@ -1,15 +1,14 @@
 # MetalLB
+一般的にKubernetes上にデプロイしたリソースを外部から接続させる場合は`Service`リソースを使用してルーティングを行うケースが多いです。
 
-一般的に Kubernetes 上にデプロイしたアプリケーションを外部公開する際は`Service`リソースを使用するケースが多いです。
+今回はそのServiceリソースの一種である`LoadBalancer`を使用します。
+LoadBalancerを使用するとServiceのエンドポイントとなるIPアドレスを外部に払いだすことができます。
 
-そして、今回はその Service リソースの一種である`LoadBalancer`を使用します。LoadBalancer を使用することで Service のエンドポイントとなる IP アドレスを払いだすことができます。
-
-しかしながら、一般的に LoadBalancer はクラウド環境下での使用が想定されており、オンプレミス環境で使用するためには[MetalLB](https://metallb.universe.tf/)などの導入が必要になります。
-今回はその MetalLB の適用方法ご紹介します。
+しかしながら、一般的にLoadBalancerはクラウドサービス環境下での使用が想定されており、オンプレミス環境で使用するためには[MetalLB](https://metallb.universe.tf/)などの導入が必要になります。
+以下ではそのMetalLBを構築したKubernetesクラスタに適用していきます。
 
 ## 適用
-
-早速 [Installation](https://metallb.universe.tf/installation/) の手順を参考に、MetalLB を適用します。
+早速[Installation](https://metallb.universe.tf/installation/)の手順を参考に、MetalLBをクラスタに適用します。
 
 ```
 # see what changes would be made, returns nonzero returncode if different
@@ -26,26 +25,22 @@ METALLB_VERSION=0.13.12
 kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v${METALLB_VERSION}/config/manifests/metallb-native.yaml
 ```
 
-次に、MetalLB の設定を記述した config ファイルを適用します。
+次に、MetalLB の設定を記述したconfigファイルを適用します。
 config ファイルは[metallb/config.yaml](../metallb/config.yaml)のものを使用します。
 
-config ファイル内の下記の部分の、Service に割り当てる IP アドレスの範囲を環境に応じて適宜変更してください。
-
+環境に応じて外部に払い出すIPアドレスの範囲をconfigファイル内の下記の部分に記載してください。
 ```
 addresses:
       - 10.0.1.201-10.0.1.240
 ```
 
-IP アドレスの範囲調整後、config ファイルを適用します。
-
+下記コマンドでconfigファイルを適用します。
 ```
 kubectl apply -f metallb/config.yaml
 ```
 
 ## 動作確認
-
 動作確認のために下記のサービスを作成します。
-
 ```
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
@@ -74,8 +69,7 @@ spec:
 EOF
 ```
 
-この後に、`lb-sample`の`EXERNAL-IP`が設定されていれば OK です。
-
+このサービスに`lb-sample`の`EXERNAL-IP`が設定されており、また実際にアクセスが確認できればOKです。
 ```
 kubectl get svc lb-sample
 NAME        TYPE           CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE
@@ -90,5 +84,4 @@ curl 10.0.1.202
 ```
 
 ### 参考
-
 - https://ryusa.hatenablog.com/entry/2021/05/21/231844
