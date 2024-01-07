@@ -1,13 +1,14 @@
 # stack-controller
 OpenStackのコントローラーをKubernetes上に乗せて、IaaSを外部に払い出せるようにするプロジェクトです。
 
-## サーバーのセットアップ
- - [初期設定](./docs/init-servers.md)
+## セットアップ
+ - [物理機材の用意](.docs/hardwares.md)
+ - [ノード構築](./docs/setup-nodes.md)
 
 ## Kubernetesクラスタ構築
- - [Kubernetesクラスタ作成](./docs/create-cluster.md)
+ - [Kubernetesクラスタ構築](./docs/create-cluster.md)
  - [Kubernetesクラスタへの接続](./docs/access-cluster.md)
- - [MetalLBの有効化](./docs/metallb.md)
+ - [MetalLBの導入](./docs/metallb.md)
 
 ### Appendix
 - [ArgoCD](./docs/argocd.md)

@@ -25,16 +25,17 @@ METALLB_VERSION=0.13.12
 kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v${METALLB_VERSION}/config/manifests/metallb-native.yaml
 ```
 
-次に、MetalLB の設定を記述したconfigファイルを適用します。
-config ファイルは[metallb/config.yaml](../metallb/config.yaml)のものを使用します。
+次に、MetalLBの設定を記述したconfigを適用します。
+configは[metallb/config.yaml](../metallb/config.yaml)のものを使用します。
 
-環境に応じて外部に払い出すIPアドレスの範囲をconfigファイル内の下記の部分に記載してください。
+ここで``kind: IPAddressPool``の``spec.addresses``には、Serviceリソースに割り当てられるIPアドレスのレンジを記載しています。
+この値は環境に応じて適宜変更してください。
 ```
 addresses:
       - 10.0.1.201-10.0.1.240
 ```
 
-下記コマンドでconfigファイルを適用します。
+IPアドレスの範囲調整後、configファイルを適用します。
 ```
 kubectl apply -f metallb/config.yaml
 ```
