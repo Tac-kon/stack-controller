@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: glance-service
+  namespace: glance
+  labels:
+    name: glance
+    app: glance
+spec:
+  type: ClusterIP
+  ports:
+  - port: 9292
+    targetPort: 9292
+    protocol: TCP
+  selector:
+    app: glance

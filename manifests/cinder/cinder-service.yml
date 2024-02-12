@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: cinder-service
+  namespace: cinder
+  labels:
+    name: cinder
+    app: cinder
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8776
+    targetPort: 8776
+    protocol: TCP
+  selector:
+    app: cinder

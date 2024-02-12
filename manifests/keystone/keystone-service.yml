@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: keystone-service
+  namespace: keystone
+  labels:
+    name: keystone
+    app: keystone
+spec:
+  type: ClusterIP
+  ports:
+  - name: public
+    port: 5000
+    targetPort: 5000
+    protocol: TCP
+  - name: admin
+    port: 35357
+    targetPort: 35357
+    protocol: TCP
+  selector:
+    app: keystone
