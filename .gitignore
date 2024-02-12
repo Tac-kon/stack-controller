@@ -11,4 +11,4 @@
 /kubespray/inventory/cluster/group_vars/k8s_cluster/*
 !/kubespray/inventory/cluster/group_vars/k8s_cluster/k8s-cluster.yml
 
-*.tar.gz
+/rook/*
